@@ -15,6 +15,11 @@ defmodule GameServer.Questions do # ok, this would eventually be replaced with a
     Enum.at(@questions, index)
   end
 
+  def get_question(_index) do
+    # Return the first question if index is out of bounds
+    Enum.at(@questions, 0)
+  end
+
   def correct_answer(question_id) do
     case Enum.find(@questions, fn q -> q.id == question_id end) do
       %{answer: answer} -> answer

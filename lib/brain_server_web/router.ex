@@ -8,6 +8,11 @@ defmodule BrainServerWeb.Router do
   scope "/api", BrainServerWeb do
     pipe_through :api
 
+
+    get "/questions", GameController, :get_all_questions
+    get "/question/:game_id", GameController, :get_current_question
+    post "/reset_game", GameController, :reset_game
+
     post "/create_game", GameController, :create_game
     post "/join_game", GameController, :join_game
     post "/submit_turn", GameController, :submit_turn
