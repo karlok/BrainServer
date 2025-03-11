@@ -39,12 +39,113 @@ defmodule BrainServerWeb.GameController do
     end
 
     def submit_turn(conn, %{"game_id" => game_id, "player" => player, "answer" => answer, "time" => time}) do
-      Game.submit_turn(game_id, player, answer, time)
-      json(conn, %{message: "Turn submitted and validated by server"})
+        # Get the game state before submitting the turn
+        game_before = Game.get_game(game_id)
+
+        cond do
+          game_before == nil ->
+            conn
+            |> put_status(404)
+            |> json(%{error: "Game not found"})
+
+          game_before.player2 == nil ->
+            conn
+            |> put_status(400)
+            |> json(%{error: "Cannot submit answer until player 2 has joined"})
+
+          true ->
+            # Get the current question
+            current_question = Questions.get_question(game_before.current_round)
+            is_correct = current_question.answer == answer
+
+            # Submit the turn
+            case Game.submit_turn(game_id, player, answer, time) do
+              :ok ->
+                # Get the updated game state
+                game_after = Game.get_game(game_id)
+
+                # Prepare the response
+                response = %{
+                  message: "Turn submitted",
+                  correct: is_correct,
+                  correct_answer: current_question.answer,
+                  question: current_question.question,
+                  waiting_for_opponent: map_size(game_after.current_round_answers) < 2,
+                  game_status: game_after.status,
+                  score: game_after.score
+                }
+
+                # Add game completion info if the game is now completed
+                response = if game_after.status == "completed" do
+                  # Safely access the winner field with a default of nil
+                  winner = Map.get(game_after, :winner, nil)
+
+                  Map.merge(response, %{
+                    game_completed: true,
+                    winner: winner,
+                    is_winner: player == winner,
+                    summary: %{
+                      rounds_played: length(game_after.rounds),
+                      final_score: game_after.score
+                    }
+                  })
+                else
+                  Map.merge(response, %{
+                    game_completed: false
+                  })
+                end
+
+                # Return the result
+                json(conn, response)
+
+              {:error, :game_not_found} ->
+                conn
+                |> put_status(404)
+                |> json(%{error: "Game not found"})
+
+              _ ->
+                conn
+                |> put_status(500)
+                |> json(%{error: "An error occurred while submitting the turn"})
+            end
+        end
     end
 
     def get_game(conn, %{"game_id" => game_id}) do
       game = Game.get_game(game_id)
-      json(conn, game)
+
+      if game do
+        response = case game.status do
+          "completed" ->
+            # For completed games, add a summary section
+            winner = Map.get(game, :winner)
+
+            %{
+              game_id: game_id,
+              status: game.status,
+              player1: game.player1,
+              player2: game.player2,
+              rounds: game.rounds,
+              current_round: game.current_round,
+              score: game.score,
+              winner: winner,
+              summary: %{
+                winner: winner,
+                rounds_played: length(game.rounds),
+                final_score: game.score
+              }
+            }
+
+          _ ->
+            # For games in progress or waiting, return the standard game state
+            game
+        end
+
+        json(conn, response)
+      else
+        conn
+        |> put_status(404)
+        |> json(%{error: "Game not found"})
+      end
     end
   end
