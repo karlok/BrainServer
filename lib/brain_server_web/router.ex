@@ -2,7 +2,7 @@ defmodule BrainServerWeb.Router do
   use BrainServerWeb, :router
 
   pipeline :api do
-    plug :accepts, ["json"]
+    plug :accepts, ["json"] # only allows JSON requests
   end
 
   scope "/api", BrainServerWeb do
