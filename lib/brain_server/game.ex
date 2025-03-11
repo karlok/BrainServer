@@ -1,5 +1,5 @@
 defmodule BrainServer.Game do
-  use Agent
+  use Agent # provides a simple in-memory store for keeping track of the active games
 
   def start_link(_) do
     Agent.start_link(fn -> %{} end, name: __MODULE__)
