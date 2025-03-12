@@ -6,14 +6,13 @@ defmodule BrainServerWeb.Router do
   end
 
   scope "/", BrainServerWeb do
-    pipe_through :browser
+    pipe_through :api
 
     get "/", PageController, :index
   end
 
   scope "/api", BrainServerWeb do
     pipe_through :api
-
 
     get "/questions", GameController, :get_all_questions
     get "/question/:game_id", GameController, :get_current_question
