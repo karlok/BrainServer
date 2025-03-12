@@ -33,7 +33,6 @@ defmodule BrainServer.MixProject do
   defp deps do
     [
       {:phoenix, "~> 1.7.20"},
-      {:phoenix_live_dashboard, "~> 0.8.3"},
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
       {:heroicons,
