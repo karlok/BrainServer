@@ -5,12 +5,6 @@ defmodule BrainServerWeb.Router do
     plug :accepts, ["json"] # only allows JSON requests
   end
 
-  scope "/", BrainServerWeb do
-    pipe_through :api
-
-    get "/", PageController, :index
-  end
-
   scope "/api", BrainServerWeb do
     pipe_through :api
 
